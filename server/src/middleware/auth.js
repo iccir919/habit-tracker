@@ -3,7 +3,7 @@ const { getDB } = require('../db/database');
 
 function auth(req, res, next) {
     try {
-        const token = req.headers('Authorization')?.replace('Bearer ', '');
+        const token = req.headers['authorization']?.replace('Bearer ', '');
 
         if (!token) {
             return res.status(401).json({ error: 'No token, authorization denied' });
@@ -15,7 +15,7 @@ function auth(req, res, next) {
         const user = db.prepare(`
             SELECT id, name, created_at
             FROM users WHERE id = ?
-        `).get(decoded.id);
+        `).get(decoded.userId);
 
         if (!user) {
             return res.status(401).json({ error: 'User not found' });
