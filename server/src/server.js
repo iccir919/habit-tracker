@@ -23,6 +23,16 @@ app.get('/', (req, res) => {
     res.json({ message: 'Habit Tracker API', version: '1.0.0' });
 });
 
+app.use('/api/auth', require('./routes/auth'));
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ 
+        error: 'Something went wrong!',
+        message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+})
+
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, async () => {
