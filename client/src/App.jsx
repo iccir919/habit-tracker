@@ -7,6 +7,7 @@ import Layout from './components/layout/Layout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
+import HabitsPage from './pages/HabitsPage';
 
 function PrivateRoute({ children }) {
     const { isAuthenticated } = useAuth();
@@ -36,6 +37,11 @@ function AppRoutes() {
                 <Route path="/dashboard" element={
                     <PrivateRoute>
                         <Dashboard />
+                    </PrivateRoute>
+                } />
+                <Route path="/habits" element={
+                    <PrivateRoute>
+                        <HabitsPage />
                     </PrivateRoute>
                 } />
             </Route>
