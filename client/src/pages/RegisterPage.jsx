@@ -57,6 +57,7 @@ function RegisterPage() {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required
+                            autoComplete="name"
                         />
                     </div>
 
@@ -69,6 +70,7 @@ function RegisterPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
+                            autoComplete="email"
                         />
                     </div>
 
@@ -81,6 +83,7 @@ function RegisterPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
+                            autoComplete="new-password"
                             minLength={6}
                         />
                     </div>
@@ -94,6 +97,7 @@ function RegisterPage() {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
+                            autoComplete="new-password"
                         />
                     </div>
 
