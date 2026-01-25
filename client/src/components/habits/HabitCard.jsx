@@ -1,4 +1,6 @@
 
+import './HabitCard.css';
+
 function HabitCard({ habit, onEdit, onDelete }) {
     return (
         <div className="habit-card" style={{ borderLeftColor: habit.color }}>

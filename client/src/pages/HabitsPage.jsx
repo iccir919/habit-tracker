@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { habitService } from '../services/habitService';
 import HabitModal from '../components/habits/HabitModal';
 import HabitCard from '../components/habits/HabitCard';
+import './HabitsPage.css';
 
 function HabitsPage() {
     const [habits, setHabits] = useState([]);

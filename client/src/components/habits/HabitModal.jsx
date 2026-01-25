@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-// import './HabitModal.css';
+import './HabitModal.css';
 
 function HabitModal({ isOpen, onClose, onSave, habit}) {
     const [formData, setFormData] = useState({
