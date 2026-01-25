@@ -43,6 +43,10 @@ function RegisterPage() {
     return (
         <div className="auth-page">
             <div className="auth-container">
+                <div className="auth-back">
+                    <Link to="/" className="back-link">← Back to home</Link>
+                </div>
+
                 <h1>Create Account</h1>
                 <p className="auth-subtitle">Start tracking your habits today</p>
 

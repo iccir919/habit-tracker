@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './hooks/useAuth';
 
 import Layout from './components/layout/Layout';
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
@@ -22,6 +23,15 @@ function PublicRoute({ children }) {
 function AppRoutes() {
     return (
         <Routes>
+
+            {/* Landing page */}
+            <Route path="/" element={
+                <PublicRoute>
+                    <LandingPage />
+                </PublicRoute>
+            } />
+
+            { /* Auth pages */}
             <Route path="/login" element={
                 <PublicRoute>
                     <LoginPage />
@@ -33,6 +43,7 @@ function AppRoutes() {
                 </PublicRoute>
             } />
 
+            { /* Protected pages */}
             <Route element={<Layout />}>
                 <Route path="/dashboard" element={
                     <PrivateRoute>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import './AuthPages.css';
 
@@ -30,6 +30,10 @@ function LoginPage() {
     return (
         <div className="auth-page">
             <div className="auth-container">
+                <div className="auth-back">
+                    <Link to="/" className="back-link">← Back to home</Link>
+                </div>
+
                 <h1>Welcome Back</h1>
                 <p className="auth-subtitle">Please log in to your account</p>
 

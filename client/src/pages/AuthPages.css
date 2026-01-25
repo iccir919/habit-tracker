@@ -3,7 +3,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #f9fafb;
     padding: 20px;
 }
 
@@ -11,9 +11,28 @@
     background: white;
     border-radius: 12px;
     padding: 40px;
-    box-shadow: 0 20px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
     width: 100%;
     max-width: 420px;
+}
+
+.auth-back {
+    margin-bottom: 24px;
+}
+
+.back-link {
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.back-link:hover {
+    color: #1f2937;
 }
 
 .auth-container h1 {
