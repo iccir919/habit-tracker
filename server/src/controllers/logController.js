@@ -89,7 +89,7 @@ exports.upsertLog = (req, res) => {
         const existingLog = db.prepare(`
             SELECT * FROM habit_logs
             WHERE user_id = ? AND habit_id = ? AND date = ?
-        `).get(habitId, req.user.id, normalizedDate);
+        `).get(req.user.id, habitId, normalizedDate);
 
         if (existingLog) {
             // Update existing log
@@ -153,7 +153,7 @@ exports.deleteLog = (req, res) => {
             WHERE user_id = ? AND habit_id = ? AND date = ?
         `);
 
-        const result = stmt.run(habitId, req.user.id, normalizedDate);
+        const result = stmt.run(req.user.id, habitId, normalizedDate);
 
         if (result.changes === 0) {
             res.status(404).json({ message: 'Log not found' });

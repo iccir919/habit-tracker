@@ -42,6 +42,7 @@ function createTables() {
             duration INTEGER,
             notes TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (habit_id) REFERENCES habits(id) ON DELETE CASCADE,
             UNIQUE(habit_id, date)
