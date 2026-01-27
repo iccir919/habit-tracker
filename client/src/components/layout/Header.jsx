@@ -9,7 +9,7 @@ function Header() {
     const handleLogout = () => {
         logout();
         navigate('/login');
-    }
+    };
 
     return (
         <header className="header">
@@ -20,12 +20,12 @@ function Header() {
 
                 <nav className="nav">
                     <Link to="/dashboard" className="nav-link">Dashboard</Link>
-                    <Link to="/daily-view" className="nav-link">Today</Link>
+                    <Link to="/today" className="nav-link">Today</Link>
                     <Link to="/habits" className="nav-link">Habits</Link>
                 </nav>
 
                 <div className="user-menu">
-                    <span className="user-name">{user.name}</span>
+                    <span className="user-name">{user?.name}</span>
                     <button onClick={handleLogout} className="btn btn-secondary">
                         Logout
                     </button>

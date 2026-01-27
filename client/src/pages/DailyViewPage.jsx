@@ -27,6 +27,17 @@ function DailyViewPage() {
         }
     };
 
+    const shouldShowHabit = (habit) => {
+        // If no target_days specified (empty array), show every day
+        if (!habit.target_days || habit.target_days.length === 0) {
+            return true;
+        }
+        
+        // If target_days specified, check if today is one of them
+        const dayOfWeek = getDayOfWeek(currentDate);
+        return habit.target_days.includes(dayOfWeek);
+    };
+
     const handlePreviousDay = () => {
         setCurrentDate(addDays(currentDate, -1));
     };

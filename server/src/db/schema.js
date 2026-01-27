@@ -20,14 +20,11 @@ function createTables() {
             description TEXT,
             tracking_type TEXT NOT NULL CHECK(tracking_type IN ('completion', 'duration')),
             target_duration INTEGER,
-            frequency TEXT DEFAULT 'daily' CHECK(frequency IN ('daily', 'weekly', 'monthly')),
-            target_days TEXT, -- JSON array stored as text
-            target_count INTEGER,
+            target_days TEXT,
             category TEXT,
             color TEXT DEFAULT '#3b82f6',
             icon TEXT,
             active BOOLEAN DEFAULT 1,
-            archived BOOLEAN DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

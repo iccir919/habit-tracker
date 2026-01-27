@@ -52,3 +52,48 @@
     font-weight: 500;
     color: #374151;
 }
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        height: auto;
+        gap: 8px;
+        padding: 12px 20px;
+    }
+
+    .logo {
+        font-size: 18px;
+    }
+
+    .nav {
+        gap: 16px;
+    }
+
+    .nav-link {
+        font-size: 14px;
+    }
+
+    .user-menu {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .user-name {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-name {
+        display: none;
+    }
+
+    .nav {
+        gap: 12px;
+    }
+
+    .nav-link {
+        font-size: 13px;
+    }
+}
