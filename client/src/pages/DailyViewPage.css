@@ -1,0 +1,133 @@
+.daily-view-header {
+    margin-bottom: 32px;
+}
+
+.daily-view-header h1 {
+    font-size: 32px;
+    color: #1f2937;
+    margin-bottom: 24px;
+}
+
+.date-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.current-date {
+    text-align: center;
+    flex: 1;
+}
+
+.date-display {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px 12px;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.btn-link:hover {
+    color: #2563eb;
+}
+
+.error-banner {
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    color: #991b1b;;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    background: white;
+    border-radius: 12px;
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.empty-state h2 {
+    font-size: 24px;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: #6b7280;
+    margin-bottom: 24px;
+}
+
+.habits-list {
+    margin-bottom: 32px;
+}
+
+.daily-summary {
+    display: flex;
+    justify-content: space-around;
+    gap: 32px;
+    padding: 24px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.summary-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+@media (max-width: 768px) {
+    .date-navigation {
+        flex-direction: column;
+    }
+
+    .date-navigation button {
+        width: 100%;
+    }
+
+    .daily-summary {
+        flex-direction: column;
+        gap: 16px;
+    }
+}

@@ -20,6 +20,7 @@ function Header() {
 
                 <nav className="nav">
                     <Link to="/dashboard" className="nav-link">Dashboard</Link>
+                    <Link to="/daily-view" className="nav-link">Today</Link>
                     <Link to="/habits" className="nav-link">Habits</Link>
                 </nav>
 

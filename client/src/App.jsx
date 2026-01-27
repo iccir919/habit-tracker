@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import HabitsPage from './pages/HabitsPage';
+import DailyViewPage from './pages/DailyViewPage';
 
 function PrivateRoute({ children }) {
     const { isAuthenticated } = useAuth();
@@ -24,14 +25,14 @@ function AppRoutes() {
     return (
         <Routes>
 
-            {/* Landing page */}
+            {/* Landing page - public */}
             <Route path="/" element={
                 <PublicRoute>
                     <LandingPage />
                 </PublicRoute>
             } />
 
-            { /* Auth pages */}
+            { /* Auth pages - public */}
             <Route path="/login" element={
                 <PublicRoute>
                     <LoginPage />
@@ -43,7 +44,7 @@ function AppRoutes() {
                 </PublicRoute>
             } />
 
-            { /* Protected pages */}
+            { /* App pages - protected */}
             <Route element={<Layout />}>
                 <Route path="/dashboard" element={
                     <PrivateRoute>
@@ -53,6 +54,11 @@ function AppRoutes() {
                 <Route path="/habits" element={
                     <PrivateRoute>
                         <HabitsPage />
+                    </PrivateRoute>
+                } />
+                <Route path="/daily-view" element={
+                    <PrivateRoute>
+                        <DailyViewPage />
                     </PrivateRoute>
                 } />
             </Route>
