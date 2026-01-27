@@ -3,9 +3,17 @@ const { validationResult } = require('express-validator');
 
 // Helper function to normalize date to start of day
 function normalizeDate(dateString) {
-    const date = new Date(dateString);
-    date.setHours(0, 0, 0, 0);
-    return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD
+  // Don't use Date object if already in YYYY-MM-DD format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return dateString;
+  }
+  
+  // Otherwise parse and format
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 // Get all logs for a specific date
@@ -168,46 +176,61 @@ exports.deleteLog = (req, res) => {
 
 // Get daily summary (all habits + their logs for a date)
 exports.getDailySummary = (req, res) => {
-    try {
-        const { date } = req.query;
-
-        if (!date) {
-            return res.status(400).json({ message: 'Date is required' });
-        }
-
-        const normalizedDate = normalizeDate(date);
-        const db = getDB();
-
-        // Get all active habits
-        const habits = db.prepare(`
-            SELECT * FROM habits
-            WHERE user_id = ? AND active = 1
-            ORDER BY created_at ASC
-        `).all(req.user.id);
-
-        // Get all logs for this date
-        const logs = db.prepare(`
-            SELECT * FROM habit_logs
-            WHERE user_id = ? AND date = ?
-        `).all(req.user.id, normalizedDate);
-
-        // Map logs by habit_id for easy lookup
-        const logMap = {};
-        logs.forEach(log => {
-            logMap[log.habit_id] = log;
-        });
-
-        const summary = habits.map(habit => ({
-            ...habit,
-            log: logMap[habit.id] || null
-        }));
-
-        res.json({
-            date: normalizeDate,
-            habits: summary
-        });
-    } catch (err) {
-        console.error('Get daily summary error:', err);
-        res.status(500).json({ message: 'Server error' });
+  try {
+    const { date } = req.query;
+    
+    if (!date) {
+      return res.status(400).json({ error: 'Date is required' });
     }
+    
+    const normalizedDate = normalizeDate(date);
+    const db = getDB();
+    
+    // Get all active habits
+    const habits = db.prepare(`
+      SELECT * FROM habits
+      WHERE user_id = ? AND active = 1
+      ORDER BY created_at ASC
+    `).all(req.user.id);
+    
+    // Parse target_days for each habit - FIX IS HERE
+    habits.forEach(habit => {
+      if (habit.target_days) {
+        try {
+          habit.target_days = JSON.parse(habit.target_days);
+        } catch (e) {
+          console.error('Failed to parse target_days for habit:', habit.id, e);
+          habit.target_days = [];
+        }
+      } else {
+        habit.target_days = [];
+      }
+    });
+    
+    // Get all logs for this date
+    const logs = db.prepare(`
+      SELECT * FROM habit_logs
+      WHERE user_id = ? AND date = ?
+    `).all(req.user.id, normalizedDate);
+    
+    // Create a map of logs by habit_id
+    const logMap = {};
+    logs.forEach(log => {
+      logMap[log.habit_id] = log;
+    });
+    
+    // Combine habits with their logs
+    const summary = habits.map(habit => ({
+      ...habit,
+      log: logMap[habit.id] || null
+    }));
+    
+    res.json({
+      date: normalizedDate,
+      habits: summary
+    });
+  } catch (err) {
+    console.error('Get daily summary error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 };

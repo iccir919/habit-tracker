@@ -25,8 +25,6 @@ router.post('/habit/:habitId', [
 ], logController.upsertLog);
 
 // Delete a log
-router.delete('/habit/:habitId', [
-    body('date').notEmpty().withMessage('Date is required')
-], logController.deleteLog);
+router.delete('/habit/:habitId', logController.deleteLog);
 
 module.exports = router;

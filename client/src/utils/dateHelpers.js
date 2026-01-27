@@ -40,6 +40,9 @@ export function isToday(date) {
 }
 
 export function toDateString(date) {
-    const d = new Date(date);
-    return d.toISOString().split('T')[0]; // Returns YYYY-MM-DD
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }

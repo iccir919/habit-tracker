@@ -56,7 +56,7 @@ function AppRoutes() {
                         <HabitsPage />
                     </PrivateRoute>
                 } />
-                <Route path="/daily-view" element={
+                <Route path="/today" element={
                     <PrivateRoute>
                         <DailyViewPage />
                     </PrivateRoute>

@@ -20,7 +20,7 @@ export const logService = {
     },
 
     // Create or update a log
-    updateLog: (habitId, logData) => {
+    upsertLog: (habitId, logData) => {
         return api.post(`/logs/habit/${habitId}`, logData);
     },
 
