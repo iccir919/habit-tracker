@@ -1,5 +1,7 @@
-const API_URL = '/api';
-
+const API_URL = import.meta.env.PROD 
+  ? '/api'  // In production, use relative URLs
+  : 'http://localhost:3000/api';  // In development, use localhost
+  
 class ApiError extends Error {
     constructor(message, status, data) {
         super(message);

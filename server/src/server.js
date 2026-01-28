@@ -1,8 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-const { createTables, createIndexes } = require('./db/schema');
-const { closeDB } = require('./db/database');
+const path = require('path');
 require('dotenv').config();
+const { initDB } = require('./db/database');
 
 const app = express();
 
@@ -11,45 +11,29 @@ app.use(cors());
 app.use(express.json());
 
 // Initialize database
-try {
-    createTables();
-    createIndexes();
-    console.log('Database initialized');
-} catch (err) {
-    console.error('Database initialization error:', err);
-    process.exit(1);
-}
-
-app.get('/', (req, res) => {
-    res.json({ message: 'Habit Tracker API', version: '1.0.0' });
-});
+initDB();
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/habits', require('./routes/routes'));
+app.use('/api/habits', require('./routes/habits'));
 app.use('/api/logs', require('./routes/logs'));
 app.use('/api/time-entries', require('./routes/timeEntries'));
 app.use('/api/stats', require('./routes/stats'));
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ 
-        error: 'Something went wrong!',
-        message: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-});
+// Serve static files from React app in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../../client/dist')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+  });
+}
 
-// Handle 404
-app.use((req, res) => {
-    res.status(404).json({ error: 'Route not found' });
-});
+const PORT = process.env.PORT || 3000;
 
-// Start server
-const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, async () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-})
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 // Graceful shutdown
 process.on('SIGINT', () => {
