@@ -1,0 +1,110 @@
+.streaks-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.streaks-list {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.streaks-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.streaks-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.streak-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border-left: 4px solid #f59e0b;
+}
+
+.streak-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.streak-icon {
+  font-size: 24px;
+}
+
+.streak-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.streak-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.streak-current {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.streak-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: #f59e0b;
+  line-height: 1;
+}
+
+.streak-label {
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.streak-longest {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: white;
+  border-radius: 4px;
+}
+
+.streak-best-label {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.streak-best-number {
+  font-size: 14px;
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+  .streak-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .streak-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

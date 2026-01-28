@@ -125,3 +125,55 @@ exports.getTimeEntries = (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+// Delete a time entry
+exports.deleteTimeEntry = (req, res) => {
+  try {
+    const { entryId } = req.params;
+    const db = getDB();
+
+    // Get the entry and verify ownership
+    const entry = db.prepare(`
+      SELECT te.*, hl.user_id, hl.id as log_id, hl.habit_id
+      FROM time_entries te
+      JOIN habit_logs hl ON te.habit_log_id = hl.id
+      WHERE te.id = ?
+    `).get(entryId);
+
+    if (!entry) {
+      return res.status(404).json({ error: 'Time entry not found' });
+    }
+
+    if (entry.user_id !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Delete the entry
+    db.prepare('DELETE FROM time_entries WHERE id = ?').run(entryId);
+
+    // Recalculate total duration
+    const result = db.prepare(`
+      SELECT SUM(duration_minutes) as total FROM time_entries WHERE habit_log_id = ?
+    `).get(entry.log_id);
+    
+    const totalDuration = result.total || 0;
+
+    // Get habit to check target
+    const habit = db.prepare('SELECT * FROM habits WHERE id = ?').get(entry.habit_id);
+    const isCompleted = totalDuration >= (habit.target_duration || 0);
+
+    // Update habit_log
+    db.prepare(`
+      UPDATE habit_logs SET duration = ?, completed = ? WHERE id = ?
+    `).run(totalDuration, isCompleted ? 1 : 0, entry.log_id);
+
+    res.json({
+      message: 'Time entry deleted',
+      totalDuration,
+      isCompleted
+    });
+  } catch (err) {
+    console.error('Delete time entry error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};

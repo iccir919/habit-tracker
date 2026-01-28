@@ -12,4 +12,7 @@ router.get('/log/:logId', timeEntryController.getTimeEntries);
 // Add time entry
 router.post('/habit/:habitId/date/:date', timeEntryController.addTimeEntry);
 
+// Delete a time entry
+router.delete('/:entryId', timeEntryController.deleteTimeEntry);
+
 module.exports = router;

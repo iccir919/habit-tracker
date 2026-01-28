@@ -1,78 +1,100 @@
 .habits-page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
 }
 
 .habits-page-header h1 {
-    font-size: 32px;
-    margin-bottom: 8px;
-    color: #1f2937;
+  font-size: 32px;
+  color: #1f2937;
+  margin-bottom: 8px;
 }
 
 .page-subtitle {
-    color: #6b7280;
-    font-size: 16px;
+  color: #6b7280;
+  font-size: 16px;
 }
 
 .error-banner {
-    background: #fee2e2;
-    border: 1px solid #fecaca;
-    color: #991b1b;
-    padding: 16px;
-    border-radius: 8px;
-    margin-bottom: 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .btn-sm {
-    padding: 6px 12px;
-    font-size: 13px;
+  padding: 6px 12px;
+  font-size: 13px;
 }
 
 .empty-state {
-    text-align: center;
-    padding: 80px 20px;
-    background: white;
-    border-radius: 12px;
+  text-align: center;
+  padding: 80px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .empty-icon {
-    font-size: 64px;
-    margin-bottom: 16px;
+  font-size: 64px;
+  margin-bottom: 16px;
 }
 
 .empty-state h2 {
-    font-size: 24px;
-    margin-bottom: 8px;
-    color: #1f2937;
+  font-size: 24px;
+  color: #1f2937;
+  margin-bottom: 8px;
 }
 
 .empty-state p {
-    color: #6b7280;
-    margin-bottom: 24px;
+  color: #6b7280;
+  margin-bottom: 24px;
 }
 
 .habits-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
 }
 
 @media (max-width: 768px) {
-    .habits-page-header {
-        flex-direction: column;
-        gap: 16px;
-    }
+  .habits-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
 
-    .habits-page-header button {
-        width: 100%;
-    }
+  .habits-page-header h1 {
+    font-size: 28px;
+  }
 
-    .habits-grid {
-        grid-template-columns: 1fr;
-    }
+  .habits-page-header .btn {
+    width: 100%;
+  }
+
+  .habits-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .habits-page-header h1 {
+    font-size: 24px;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+  }
 }

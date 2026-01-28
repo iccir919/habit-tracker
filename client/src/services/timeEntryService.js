@@ -13,5 +13,10 @@ export const timeEntryService = {
       startTime,
       endTime
     });
+  },
+
+  // Delete time entry
+  deleteTimeEntry: (entryId) => {
+    return api.delete(`/time-entries/${entryId}`);
   }
 };
