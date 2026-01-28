@@ -2,10 +2,10 @@
   "name": "habit-tracker",
   "version": "1.0.0",
   "scripts": {
-    "install-server": "cd server && npm install",
-    "install-client": "cd client && npm install",
-    "build": "cd client && npm run build",
-    "start": "cd server && npm start",
-    "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm run dev\""
+    "build": "cd client && npm install && npm run build",
+    "start": "cd server && npm install && node src/server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

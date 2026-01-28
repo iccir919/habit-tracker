@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
-const { initDB } = require('./db/database');
+const { initDB, closeDB } = require('./db/database');
 
 const app = express();
 
@@ -31,23 +31,24 @@ if (process.env.NODE_ENV === 'production') {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+// Store server instance
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
 // Graceful shutdown
 process.on('SIGINT', () => {
-    console.log('Shutting down server...');
-    server.close(() => {
-        closeDB();
-        process.exit(0);
-    });
+  console.log('Shutting down server...');
+  server.close(() => {
+    closeDB();
+    process.exit(0);
+  });
 });
 
 process.on('SIGTERM', () => {
-    console.log('Shutting down server...');
-    server.close(() => {
-        closeDB();
-        process.exit(0);
-    });
+  console.log('Shutting down server...');
+  server.close(() => {
+    closeDB();
+    process.exit(0);
+  });
 });
