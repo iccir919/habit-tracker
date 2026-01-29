@@ -32,7 +32,7 @@ function RegisterPage() {
 
         try {
             await register(name, email, password);
-            navigate('/dashboard');
+            navigate('/habits');
         } catch (err) {
             setError(err.message || 'Registration failed');
         } finally {
