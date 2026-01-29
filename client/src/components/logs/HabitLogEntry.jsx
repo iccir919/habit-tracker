@@ -8,11 +8,12 @@ function HabitLogEntry({ habit, log, date, onUpdate, onRefresh }) {
   const [isSaving, setIsSaving] = useState(false);
   const [showTimeModal, setShowTimeModal] = useState(false);
 
-  const isCompleted = log?.completed === 1;
+  const isCompleted = log?.completed === true || log?.completed === 1;
   const isCompletion = habit.tracking_type === 'completion';
   const isDuration = habit.tracking_type === 'duration';
 
   const handleToggleComplete = async () => {
+    if (isSaving) return; // Prevent double-clicks
     setIsSaving(true);
     try {
       await onUpdate(habit.id, {
@@ -104,10 +105,6 @@ function HabitLogEntry({ habit, log, date, onUpdate, onRefresh }) {
               />
             </div>
           </div>
-        )}
-
-        {isSaving && (
-          <div className="saving-indicator">Saving...</div>
         )}
       </div>
 

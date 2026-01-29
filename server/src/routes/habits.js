@@ -17,7 +17,10 @@ router.get('/:id', habitController.getHabit);
 router.post('/', [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('trackingType').isIn(['completion', 'duration']).withMessage('Invalid tracking type'),
-  body('targetDuration').optional().isInt({ min: 1 }).withMessage('Target duration must be positive'),
+  body('targetDuration')
+    .if(body('trackingType').equals('duration'))
+    .isInt({ min: 1 })
+    .withMessage('Target duration must be positive'),
   body('targetDays').optional().isArray().withMessage('Target days must be an array'),
   body('category').optional().trim(),
   body('color').optional().matches(/^#[0-9A-Fa-f]{6}$/).withMessage('Invalid color format'),
@@ -28,7 +31,10 @@ router.post('/', [
 router.put('/:id', [
   body('name').optional().trim().notEmpty().withMessage('Name cannot be empty'),
   body('trackingType').optional().isIn(['completion', 'duration']).withMessage('Invalid tracking type'),
-  body('targetDuration').optional().isInt({ min: 1 }).withMessage('Target duration must be positive'),
+  body('targetDuration')
+    .if(body('trackingType').equals('duration'))
+    .isInt({ min: 1 })
+    .withMessage('Target duration must be positive'),
   body('targetDays').optional().isArray().withMessage('Target days must be an array'),
   body('category').optional().trim(),
   body('color').optional().matches(/^#[0-9A-Fa-f]{6}$/).withMessage('Invalid color format'),

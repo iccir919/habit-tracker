@@ -80,14 +80,6 @@ function DailyViewPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="container">
-        <div className="loading">Loading daily view...</div>
-      </div>
-    );
-  }
-
   return (
     <div className="container">
       <div className="daily-view-header">
@@ -158,7 +150,7 @@ function DailyViewPage() {
         <div className="summary-stat">
           <span className="stat-label">Completed:</span>
           <span className="stat-value">
-            {habits.filter(h => h.log?.completed === 1).length} / {habits.length}
+            {habits.filter(h => h.log?.completed === true).length} / {habits.length}
           </span>
         </div>
         {habits.some(h => h.tracking_type === 'duration') && (

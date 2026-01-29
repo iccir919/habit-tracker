@@ -13,12 +13,15 @@ exports.createHabit = async (req, res) => {
       name,
       description = '',
       trackingType,
-      targetDuration = null,
+      targetDuration,
       targetDays = [],
       category = '',
       color = '#3b82f6',
       icon = ''
     } = req.body;
+    
+    // Convert empty string to null for targetDuration
+    const cleanTargetDuration = targetDuration === '' || targetDuration === undefined ? null : targetDuration;
     
     const result = await db.query(
       `INSERT INTO habits (
@@ -30,7 +33,7 @@ exports.createHabit = async (req, res) => {
         name,
         description,
         trackingType,
-        targetDuration,
+        cleanTargetDuration,
         JSON.stringify(targetDays),
         category,
         color,
@@ -117,6 +120,9 @@ exports.updateHabit = async (req, res) => {
         
         if (key === 'targetDays') {
           values.push(JSON.stringify(req.body[key]));
+        } else if (key === 'targetDuration') {
+          // Convert empty string to null for targetDuration
+          values.push(req.body[key] === '' || req.body[key] === undefined ? null : req.body[key]);
         } else {
           values.push(req.body[key]);
         }
