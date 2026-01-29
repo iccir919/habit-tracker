@@ -39,15 +39,6 @@ function LandingPage() {
                 </div>
             </header>
 
-            {/* Footer */}
-            <footer className="landing-footer">
-                <div className="container">
-                    <div className="footer-content">
-                        <p>&copy; 2026 Habit Tracker. Built with ❤️</p>
-                    </div>
-                </div>
-            </footer>
-
         </div>
     );
 }
