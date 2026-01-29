@@ -1,45 +1,54 @@
 const { getDB } = require('../db/database');
 
 // Get user statistics
-exports.getUserStats = (req, res) => {
+exports.getUserStats = async (req, res) => {
   try {
     const db = getDB();
     const userId = req.user.id;
     
     // Get total habits
-    const totalHabits = db.prepare(`
-      SELECT COUNT(*) as count FROM habits WHERE user_id = ? AND active = 1
-    `).get(userId).count;
+    const totalHabitsResult = await db.query(
+      'SELECT COUNT(*) as count FROM habits WHERE user_id = $1 AND active = true',
+      [userId]
+    );
+    const totalHabits = parseInt(totalHabitsResult.rows[0].count);
     
     // Get total logs (all time)
-    const totalLogs = db.prepare(`
-      SELECT COUNT(*) as count FROM habit_logs WHERE user_id = ?
-    `).get(userId).count;
+    const totalLogsResult = await db.query(
+      'SELECT COUNT(*) as count FROM habit_logs WHERE user_id = $1',
+      [userId]
+    );
+    const totalLogs = parseInt(totalLogsResult.rows[0].count);
     
     // Get completion rate (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
     
-    const completionStats = db.prepare(`
-      SELECT 
+    const completionStatsResult = await db.query(
+      `SELECT 
         COUNT(*) as total,
-        SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed
-      FROM habit_logs
-      WHERE user_id = ? AND date >= ?
-    `).get(userId, thirtyDaysAgoStr);
+        SUM(CASE WHEN completed = true THEN 1 ELSE 0 END) as completed
+       FROM habit_logs
+       WHERE user_id = $1 AND date >= $2`,
+      [userId, thirtyDaysAgoStr]
+    );
     
+    const completionStats = completionStatsResult.rows[0];
     const completionRate = completionStats.total > 0 
       ? Math.round((completionStats.completed / completionStats.total) * 100)
       : 0;
     
     // Get current streaks for each habit
-    const habits = db.prepare(`
-      SELECT id, name, icon FROM habits WHERE user_id = ? AND active = 1
-    `).all(userId);
+    const habitsResult = await db.query(
+      'SELECT id, name, icon FROM habits WHERE user_id = $1 AND active = true',
+      [userId]
+    );
     
-    const streaks = habits.map(habit => {
-      const streak = calculateStreak(db, habit.id);
+    const habits = habitsResult.rows;
+    
+    const streaks = await Promise.all(habits.map(async (habit) => {
+      const streak = await calculateStreak(db, habit.id);
       return {
         habitId: habit.id,
         habitName: habit.name,
@@ -47,14 +56,15 @@ exports.getUserStats = (req, res) => {
         currentStreak: streak.current,
         longestStreak: streak.longest
       };
-    });
+    }));
     
     // Get total time logged (for duration habits)
-    const totalMinutes = db.prepare(`
-      SELECT SUM(duration) as total
-      FROM habit_logs
-      WHERE user_id = ?
-    `).get(userId).total || 0;
+    const totalMinutesResult = await db.query(
+      'SELECT SUM(duration) as total FROM habit_logs WHERE user_id = $1',
+      [userId]
+    );
+    
+    const totalMinutes = parseInt(totalMinutesResult.rows[0].total) || 0;
     
     res.json({
       totalHabits,
@@ -71,14 +81,17 @@ exports.getUserStats = (req, res) => {
 };
 
 // Helper function to calculate streak
-function calculateStreak(db, habitId) {
+async function calculateStreak(db, habitId) {
   // Get all completed logs ordered by date descending
-  const logs = db.prepare(`
-    SELECT date, completed
-    FROM habit_logs
-    WHERE habit_id = ?
-    ORDER BY date DESC
-  `).all(habitId);
+  const logsResult = await db.query(
+    `SELECT date, completed
+     FROM habit_logs
+     WHERE habit_id = $1
+     ORDER BY date DESC`,
+    [habitId]
+  );
+  
+  const logs = logsResult.rows;
   
   if (logs.length === 0) {
     return { current: 0, longest: 0 };
@@ -96,7 +109,7 @@ function calculateStreak(db, habitId) {
     
     // Check if this log is for the expected date
     if (logDate.getTime() === expectedDate.getTime()) {
-      if (log.completed === 1) {
+      if (log.completed) {
         tempStreak++;
         if (tempStreak > longestStreak) {
           longestStreak = tempStreak;
@@ -121,7 +134,7 @@ function calculateStreak(db, habitId) {
       expectedDate = new Date(logDate);
       expectedDate.setDate(expectedDate.getDate() - 1);
       
-      if (log.completed === 1) {
+      if (log.completed) {
         tempStreak = 1;
       }
     }
@@ -136,43 +149,48 @@ function calculateStreak(db, habitId) {
 }
 
 // Get habit-specific stats
-exports.getHabitStats = (req, res) => {
+exports.getHabitStats = async (req, res) => {
   try {
     const { habitId } = req.params;
     const db = getDB();
     
     // Verify habit belongs to user
-    const habit = db.prepare(`
-      SELECT * FROM habits WHERE id = ? AND user_id = ?
-    `).get(habitId, req.user.id);
+    const habitResult = await db.query(
+      'SELECT * FROM habits WHERE id = $1 AND user_id = $2',
+      [habitId, req.user.id]
+    );
+    
+    const habit = habitResult.rows[0];
     
     if (!habit) {
       return res.status(404).json({ error: 'Habit not found' });
     }
     
     // Get total completions
-    const totalCompletions = db.prepare(`
-      SELECT COUNT(*) as count
-      FROM habit_logs
-      WHERE habit_id = ? AND completed = 1
-    `).get(habitId).count;
+    const totalCompletionsResult = await db.query(
+      'SELECT COUNT(*) as count FROM habit_logs WHERE habit_id = $1 AND completed = true',
+      [habitId]
+    );
+    const totalCompletions = parseInt(totalCompletionsResult.rows[0].count);
     
     // Get streak
-    const streak = calculateStreak(db, habitId);
+    const streak = await calculateStreak(db, habitId);
     
     // Get completion rate (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
     
-    const recentStats = db.prepare(`
-      SELECT 
+    const recentStatsResult = await db.query(
+      `SELECT 
         COUNT(*) as total,
-        SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed
-      FROM habit_logs
-      WHERE habit_id = ? AND date >= ?
-    `).get(habitId, thirtyDaysAgoStr);
+        SUM(CASE WHEN completed = true THEN 1 ELSE 0 END) as completed
+       FROM habit_logs
+       WHERE habit_id = $1 AND date >= $2`,
+      [habitId, thirtyDaysAgoStr]
+    );
     
+    const recentStats = recentStatsResult.rows[0];
     const completionRate = recentStats.total > 0
       ? Math.round((recentStats.completed / recentStats.total) * 100)
       : 0;
@@ -182,12 +200,13 @@ exports.getHabitStats = (req, res) => {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
     
-    const recentLogs = db.prepare(`
-      SELECT date, completed, duration
-      FROM habit_logs
-      WHERE habit_id = ? AND date >= ?
-      ORDER BY date DESC
-    `).all(habitId, sevenDaysAgoStr);
+    const recentLogsResult = await db.query(
+      `SELECT date, completed, duration
+       FROM habit_logs
+       WHERE habit_id = $1 AND date >= $2
+       ORDER BY date DESC`,
+      [habitId, sevenDaysAgoStr]
+    );
     
     res.json({
       habitName: habit.name,
@@ -195,7 +214,7 @@ exports.getHabitStats = (req, res) => {
       currentStreak: streak.current,
       longestStreak: streak.longest,
       completionRate,
-      recentLogs
+      recentLogs: recentLogsResult.rows
     });
   } catch (err) {
     console.error('Get habit stats error:', err);

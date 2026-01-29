@@ -3,12 +3,9 @@ const { validationResult } = require('express-validator');
 
 // Helper function to normalize date to start of day
 function normalizeDate(dateString) {
-  // Don't use Date object if already in YYYY-MM-DD format
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     return dateString;
   }
-  
-  // Otherwise parse and format
   const date = new Date(dateString);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -18,164 +15,163 @@ function normalizeDate(dateString) {
 
 // Get all logs for a specific date
 exports.getLogsByDate = async (req, res) => {
-    try {
-        const { date } = req.query;
+  try {
+    const { date } = req.query;
 
-        if (!date) {
-            return res.status(400).json({ message: 'Date is required' });
-        }
-
-        const normalizedDate = normalizeDate(date);
-        const db = getDB();
-
-        const logs = await db.prepare(`
-            SELECT * FROM habit_logs
-            WHERE user_id = ? AND date = ?
-        `).all(req.user.id, normalizedDate);
-
-        res.json(logs)
-    } catch (err) {
-        console.error('Get logs by date error:', err);
-        res.status(500).json({ message: 'Server error' });
+    if (!date) {
+      return res.status(400).json({ message: 'Date is required' });
     }
+
+    const normalizedDate = normalizeDate(date);
+    const db = getDB();
+
+    const result = await db.query(
+      'SELECT * FROM habit_logs WHERE user_id = $1 AND date = $2',
+      [req.user.id, normalizedDate]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Get logs by date error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 // Get logs for a specific habit
-exports.getHabitLogs = (req, res) => {
-    try {
-        const { habitId } = req.params;
-        const { startDate, endDate, limit = 30 } = req.query;
+exports.getHabitLogs = async (req, res) => {
+  try {
+    const { habitId } = req.params;
+    const { startDate, endDate, limit = 30 } = req.query;
 
-        const db = getDB();
-        let query = `
-            SELECT * FROM habit_logs
-            WHERE user_id = ? AND habit_id = ?
-        `;
-        const params = [habitId, req.user.id];
+    const db = getDB();
+    let query = `
+      SELECT * FROM habit_logs
+      WHERE user_id = $1 AND habit_id = $2
+    `;
+    const params = [req.user.id, habitId];
+    let paramCount = 3;
 
-        if (startDate) {
-            query += ' AND date >= ?';
-            params.push(normalizeDate(startDate));
-        }
-
-        query += ' ORDER BY date DESC LIMIT ?';
-        params.push(parseInt(limit));
-
-        const logs = db.prepare(query).all(...params);
-
-        res.json(logs);
-    } catch (err) {
-        console.error('Get habit logs error:', err);
-        res.status(500).json({ message: 'Server error' });
+    if (startDate) {
+      query += ` AND date >= $${paramCount}`;
+      params.push(normalizeDate(startDate));
+      paramCount++;
     }
+
+    query += ` ORDER BY date DESC LIMIT $${paramCount}`;
+    params.push(parseInt(limit));
+
+    const result = await db.query(query, params);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Get habit logs error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 // Create or update a log
-exports.upsertLog = (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-
-        const { habitId} = req.params;
-        const { date, completed, duration, notes } = req.body;
-
-        const normalizedDate = normalizeDate(date);
-        const db = getDB();
-
-        // Check if habit exists and belongs to user
-        const habit = db.prepare(`
-            SELECT * FROM habits WHERE id = ? AND user_id = ?
-        `).get(habitId, req.user.id);
-
-        if (!habit) {
-            return res.status(404).json({ message: 'Habit not found' });
-        }
-
-        // Check if log already exists
-        const existingLog = db.prepare(`
-            SELECT * FROM habit_logs
-            WHERE user_id = ? AND habit_id = ? AND date = ?
-        `).get(req.user.id, habitId, normalizedDate);
-
-        if (existingLog) {
-            // Update existing log
-            const stmt = db.prepare(`
-                UPDATE habit_logs
-                SET completed = ?, duration = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            `);
-
-            stmt.run(
-                completed !== undefined ? (completed ? 1 : 0) : existingLog.completed,
-                duration !== undefined ? duration : existingLog.duration,
-                notes !== undefined ? notes : existingLog.notes,
-                existingLog.id
-            );
-
-            const updatedLog = db.prepare(`SELECT * FROM habit_logs WHERE id = ?`).get(existingLog.id);
-
-            res.json(updatedLog);
-        } else {
-            // Create new log
-            const stmt = db.prepare(`
-                INSERT INTO habit_logs (user_id, habit_id, date, completed, duration, notes)
-                VALUES (?, ?, ?, ?, ?, ?)
-            `);
-
-            const result = stmt.run(
-                req.user.id,
-                habitId,
-                normalizedDate,
-                completed ? 1 : 0,
-                duration || 0,
-                notes || null
-            );
-
-            const newLog = db.prepare(`SELECT * FROM habit_logs WHERE id = ?`).get(result.lastInsertRowid);
-
-            res.status(201).json(newLog);
-        }
-    } catch (err) {
-        console.error('Upsert log error:', err);
-        res.status(500).json({ message: 'Server error' });
+exports.upsertLog = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
+
+    const { habitId } = req.params;
+    const { date, completed, duration, notes } = req.body;
+
+    const normalizedDate = normalizeDate(date);
+    const db = getDB();
+
+    // Check if habit exists and belongs to user
+    const habitResult = await db.query(
+      'SELECT * FROM habits WHERE id = $1 AND user_id = $2',
+      [habitId, req.user.id]
+    );
+
+    if (habitResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Habit not found' });
+    }
+
+    // Check if log already exists
+    const existingLogResult = await db.query(
+      'SELECT * FROM habit_logs WHERE user_id = $1 AND habit_id = $2 AND date = $3',
+      [req.user.id, habitId, normalizedDate]
+    );
+
+    const existingLog = existingLogResult.rows[0];
+
+    if (existingLog) {
+      // Update existing log
+      const result = await db.query(
+        `UPDATE habit_logs
+         SET completed = $1, duration = $2, notes = $3, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $4
+         RETURNING *`,
+        [
+          completed !== undefined ? completed : existingLog.completed,
+          duration !== undefined ? duration : existingLog.duration,
+          notes !== undefined ? notes : existingLog.notes,
+          existingLog.id
+        ]
+      );
+
+      res.json(result.rows[0]);
+    } else {
+      // Create new log
+      const result = await db.query(
+        `INSERT INTO habit_logs (user_id, habit_id, date, completed, duration, notes)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING *`,
+        [
+          req.user.id,
+          habitId,
+          normalizedDate,
+          completed || false,
+          duration || 0,
+          notes || null
+        ]
+      );
+
+      res.status(201).json(result.rows[0]);
+    }
+  } catch (err) {
+    console.error('Upsert log error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 // Delete a log
-exports.deleteLog = (req, res) => {
-    try {
-        const { habitId } = req.params;
-        const { date } = req.query;
+exports.deleteLog = async (req, res) => {
+  try {
+    const { habitId } = req.params;
+    const { date } = req.query;
 
-        if (!date) {
-            return res.status(400).json({ message: 'Date is required' });
-        }
-
-        const normalizedDate = normalizeDate(date);
-        const db = getDB();
-
-        const stmt = db.prepare(`
-            DELETE FROM habit_logs
-            WHERE user_id = ? AND habit_id = ? AND date = ?
-        `);
-
-        const result = stmt.run(req.user.id, habitId, normalizedDate);
-
-        if (result.changes === 0) {
-            res.status(404).json({ message: 'Log not found' });
-        }
-
-        res.json({ message: 'Log deleted successfully' });
-    } catch (err) {
-        console.error('Delete log error:', err);
-        res.status(500).json({ message: 'Server error' });
+    if (!date) {
+      return res.status(400).json({ message: 'Date is required' });
     }
+
+    const normalizedDate = normalizeDate(date);
+    const db = getDB();
+
+    const result = await db.query(
+      'DELETE FROM habit_logs WHERE user_id = $1 AND habit_id = $2 AND date = $3',
+      [req.user.id, habitId, normalizedDate]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Log not found' });
+    }
+
+    res.json({ message: 'Log deleted successfully' });
+  } catch (err) {
+    console.error('Delete log error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 // Get daily summary (all habits + their logs for a date)
-exports.getDailySummary = (req, res) => {
+exports.getDailySummary = async (req, res) => {
   try {
     const { date } = req.query;
     
@@ -187,19 +183,19 @@ exports.getDailySummary = (req, res) => {
     const db = getDB();
     
     // Get all active habits
-    const habits = db.prepare(`
-      SELECT * FROM habits
-      WHERE user_id = ? AND active = 1
-      ORDER BY created_at ASC
-    `).all(req.user.id);
+    const habitsResult = await db.query(
+      'SELECT * FROM habits WHERE user_id = $1 AND active = true ORDER BY created_at ASC',
+      [req.user.id]
+    );
     
-    // Parse target_days for each habit - FIX IS HERE
+    const habits = habitsResult.rows;
+    
+    // Parse target_days for each habit
     habits.forEach(habit => {
       if (habit.target_days) {
         try {
           habit.target_days = JSON.parse(habit.target_days);
         } catch (e) {
-          console.error('Failed to parse target_days for habit:', habit.id, e);
           habit.target_days = [];
         }
       } else {
@@ -208,10 +204,12 @@ exports.getDailySummary = (req, res) => {
     });
     
     // Get all logs for this date
-    const logs = db.prepare(`
-      SELECT * FROM habit_logs
-      WHERE user_id = ? AND date = ?
-    `).all(req.user.id, normalizedDate);
+    const logsResult = await db.query(
+      'SELECT * FROM habit_logs WHERE user_id = $1 AND date = $2',
+      [req.user.id, normalizedDate]
+    );
+    
+    const logs = logsResult.rows;
     
     // Create a map of logs by habit_id
     const logMap = {};

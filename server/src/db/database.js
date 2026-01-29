@@ -1,27 +1,42 @@
-const Database = require('better-sqlite3');
+const { Pool } = require('pg');
 require('dotenv').config();
 
-const dbPath = process.env.DATABASE_PATH || './habit-tracker.db';
-const db = new Database(dbPath);
+// Create connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
-db.pragma('foreign_keys = ON');
-db.pragma('journal_mode = WAL');
+// Test connection
+pool.on('connect', () => {
+  console.log('Connected to PostgreSQL database');
+});
 
-function initDB() {
-    console.log('Database initialized:', dbPath);
-    createTables(db);
-    createIndexes(db);
+pool.on('error', (err) => {
+  console.error('Unexpected database error:', err);
+});
+
+async function initDB() {
+  try {
+    await createTables();
+    await createIndexes();
+    console.log('Database initialized successfully');
+  } catch (err) {
+    console.error('Database initialization error:', err);
+    throw err;
+  }
 }
 
 function getDB() {
-    return db;
+  return pool;
 }
 
-function closeDB() {
-    db.close();
-    console.log('Database connection closed.');
+async function closeDB() {
+  await pool.end();
+  console.log('Database connection closed');
 }
 
+// Import after pool is defined
 const { createTables, createIndexes } = require('./schema');
 
 module.exports = { initDB, getDB, closeDB };

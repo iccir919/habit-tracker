@@ -18,7 +18,7 @@ function PrivateRoute({ children }) {
 
 function PublicRoute({ children }) {
     const { isAuthenticated } = useAuth();
-    return !isAuthenticated ? children : <Navigate to="/dashboard" />;
+    return !isAuthenticated ? children : <Navigate to="/habits" />;
 }
 
 function AppRoutes() {
@@ -63,7 +63,7 @@ function AppRoutes() {
                 } />
             </Route>
 
-            <Route path="/" element={<Navigate to="/habits" />} />
+            <Route path="/" element={<Navigate to="/dashboard" />} />
         </Routes>
     );
 }

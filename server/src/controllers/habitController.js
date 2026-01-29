@@ -1,7 +1,7 @@
 const { getDB } = require('../db/database');
 const { validationResult } = require('express-validator');
 
-exports.createHabit = (req, res) => {
+exports.createHabit = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -20,26 +20,25 @@ exports.createHabit = (req, res) => {
       icon = ''
     } = req.body;
     
-    const stmt = db.prepare(`
-      INSERT INTO habits (
+    const result = await db.query(
+      `INSERT INTO habits (
         user_id, name, description, tracking_type, target_duration,
         target_days, category, color, icon
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    
-    const result = stmt.run(
-      req.user.id,
-      name,
-      description,
-      trackingType,
-      targetDuration,
-      JSON.stringify(targetDays),
-      category,
-      color,
-      icon
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      [
+        req.user.id,
+        name,
+        description,
+        trackingType,
+        targetDuration,
+        JSON.stringify(targetDays),
+        category,
+        color,
+        icon
+      ]
     );
     
-    const habit = db.prepare('SELECT * FROM habits WHERE id = ?').get(result.lastInsertRowid);
+    const habit = result.rows[0];
     
     if (habit.target_days) {
       habit.target_days = JSON.parse(habit.target_days);
@@ -52,14 +51,17 @@ exports.createHabit = (req, res) => {
   }
 };
 
-exports.getHabits = (req, res) => {
+exports.getHabits = async (req, res) => {
   try {
     const db = getDB();
-    const habits = db.prepare(`
-      SELECT * FROM habits
-      WHERE user_id = ? AND active = 1
-      ORDER BY created_at DESC
-    `).all(req.user.id);
+    const result = await db.query(
+      `SELECT * FROM habits
+       WHERE user_id = $1 AND active = true
+       ORDER BY created_at DESC`,
+      [req.user.id]
+    );
+    
+    const habits = result.rows;
     
     // Parse target_days for each habit
     habits.forEach(habit => {
@@ -75,12 +77,15 @@ exports.getHabits = (req, res) => {
   }
 };
 
-exports.getHabit = (req, res) => {
+exports.getHabit = async (req, res) => {
   try {
     const db = getDB();
-    const habit = db.prepare(`
-      SELECT * FROM habits WHERE id = ? AND user_id = ?
-    `).get(req.params.id, req.user.id);
+    const result = await db.query(
+      'SELECT * FROM habits WHERE id = $1 AND user_id = $2',
+      [req.params.id, req.user.id]
+    );
+    
+    const habit = result.rows[0];
     
     if (!habit) {
       return res.status(404).json({ error: 'Habit not found' });
@@ -96,24 +101,26 @@ exports.getHabit = (req, res) => {
   }
 };
 
-exports.updateHabit = (req, res) => {
+exports.updateHabit = async (req, res) => {
   try {
     const db = getDB();
     const updates = [];
     const values = [];
+    let paramCount = 1;
     
     const allowedFields = ['name', 'description', 'trackingType', 'targetDuration', 'targetDays', 'category', 'color', 'icon', 'active'];
     
     Object.keys(req.body).forEach(key => {
       if (allowedFields.includes(key)) {
         const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-        updates.push(`${dbKey} = ?`);
+        updates.push(`${dbKey} = $${paramCount}`);
         
         if (key === 'targetDays') {
           values.push(JSON.stringify(req.body[key]));
         } else {
           values.push(req.body[key]);
         }
+        paramCount++;
       }
     });
     
@@ -121,20 +128,21 @@ exports.updateHabit = (req, res) => {
       return res.status(400).json({ error: 'No fields to update' });
     }
     
-    values.push(req.params.id, req.user.id);
+    values.push(req.params.id);
+    values.push(req.user.id);
     
-    const stmt = db.prepare(`
-      UPDATE habits SET ${updates.join(', ')}
-      WHERE id = ? AND user_id = ?
-    `);
+    const result = await db.query(
+      `UPDATE habits SET ${updates.join(', ')}
+       WHERE id = $${paramCount} AND user_id = $${paramCount + 1}
+       RETURNING *`,
+      values
+    );
     
-    const result = stmt.run(...values);
-    
-    if (result.changes === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Habit not found' });
     }
     
-    const habit = db.prepare('SELECT * FROM habits WHERE id = ?').get(req.params.id);
+    const habit = result.rows[0];
     
     if (habit.target_days) {
       habit.target_days = JSON.parse(habit.target_days);
@@ -147,23 +155,18 @@ exports.updateHabit = (req, res) => {
   }
 };
 
-exports.deleteHabit = (req, res) => {
+exports.deleteHabit = async (req, res) => {
   try {
     const db = getDB();
     
-    const stmt = db.prepare(`
-      DELETE FROM habits
-      WHERE id = ? AND user_id = ?
-    `);
+    const result = await db.query(
+      'DELETE FROM habits WHERE id = $1 AND user_id = $2',
+      [req.params.id, req.user.id]
+    );
     
-    const result = stmt.run(req.params.id, req.user.id);
-    
-    if (result.changes === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Habit not found' });
     }
-    
-    // Delete associated logs
-    db.prepare('DELETE FROM habit_logs WHERE habit_id = ?').run(req.params.id);
     
     res.json({ message: 'Habit deleted successfully' });
   } catch (err) {

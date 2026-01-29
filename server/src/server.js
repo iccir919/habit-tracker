@@ -11,7 +11,10 @@ app.use(cors());
 app.use(express.json());
 
 // Initialize database
-initDB();
+initDB().catch(err => {
+  console.error('Failed to initialize database:', err);
+  process.exit(1);
+});
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -39,16 +42,16 @@ const server = app.listen(PORT, () => {
 // Graceful shutdown
 process.on('SIGINT', () => {
   console.log('Shutting down server...');
-  server.close(() => {
-    closeDB();
+  server.close(async () => {
+    await closeDB();
     process.exit(0);
   });
 });
 
 process.on('SIGTERM', () => {
   console.log('Shutting down server...');
-  server.close(() => {
-    closeDB();
+  server.close(async () => {
+    await closeDB();
     process.exit(0);
   });
 });
