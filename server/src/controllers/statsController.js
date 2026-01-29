@@ -1,5 +1,14 @@
 const { getDB } = require('../db/database');
 
+// Helper function to normalize date to local timezone
+function normalizeDate(date) {
+  const d = date || new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // Get user statistics
 exports.getUserStats = async (req, res) => {
   try {
@@ -13,13 +22,6 @@ exports.getUserStats = async (req, res) => {
     );
     const totalHabits = parseInt(totalHabitsResult.rows[0].count);
     
-    // Get total completed goals (all time)
-    const totalCompletedResult = await db.query(
-      'SELECT COUNT(*) as count FROM habit_logs WHERE user_id = $1 AND completed = true',
-      [userId]
-    );
-    const totalCompleted = parseInt(totalCompletedResult.rows[0].count);
-    
     // Get total days logged (unique dates where user logged anything)
     const totalDaysResult = await db.query(
       'SELECT COUNT(DISTINCT date) as count FROM habit_logs WHERE user_id = $1',
@@ -27,25 +29,45 @@ exports.getUserStats = async (req, res) => {
     );
     const totalDays = parseInt(totalDaysResult.rows[0].count);
     
-    // Get completion rate (last 30 days)
-    // This is: how many days did I complete my goal out of total logged days
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+    // Get today's progress (use local timezone)
+    const today = normalizeDate(new Date());
     
-    const completionStatsResult = await db.query(
-      `SELECT 
-        COUNT(*) as total_days,
-        SUM(CASE WHEN completed = true THEN 1 ELSE 0 END) as completed_days
-       FROM habit_logs
-       WHERE user_id = $1 AND date >= $2`,
-      [userId, thirtyDaysAgoStr]
+    // Get all active habits with their schedules
+    const allHabitsResult = await db.query(
+      'SELECT id, target_days FROM habits WHERE user_id = $1 AND active = true',
+      [userId]
     );
     
-    const completionStats = completionStatsResult.rows[0];
-    const completionRate = completionStats.total_days > 0 
-      ? Math.round((completionStats.completed_days / completionStats.total_days) * 100)
-      : 0;
+    const allHabits = allHabitsResult.rows;
+    
+    // Filter habits scheduled for today
+    const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()];
+    
+    const todayHabits = allHabits.filter(habit => {
+      if (!habit.target_days || habit.target_days === '[]') {
+        return true; // Daily habit
+      }
+      try {
+        const days = JSON.parse(habit.target_days);
+        return days.length === 0 || days.includes(dayOfWeek);
+      } catch {
+        return true;
+      }
+    });
+    
+    const todayTotal = todayHabits.length;
+    
+    // Get completed habits for today
+    const todayCompletedResult = await db.query(
+      `SELECT COUNT(*) as count 
+       FROM habit_logs 
+       WHERE user_id = $1 
+       AND date = $2 
+       AND completed = true`,
+      [userId, today]
+    );
+    
+    const todayCompleted = parseInt(todayCompletedResult.rows[0].count);
     
     // Get current streaks for each habit
     const habitsResult = await db.query(
@@ -66,17 +88,11 @@ exports.getUserStats = async (req, res) => {
       };
     }));
     
-    // Get best current streak
-    const bestStreak = streaks.length > 0 
-      ? Math.max(...streaks.map(s => s.currentStreak))
-      : 0;
-    
     res.json({
       totalHabits,
-      totalCompleted,
       totalDays,
-      completionRate,
-      bestStreak,
+      todayTotal,
+      todayCompleted,
       streaks: streaks.sort((a, b) => b.currentStreak - a.currentStreak)
     });
   } catch (err) {
@@ -184,7 +200,7 @@ exports.getHabitStats = async (req, res) => {
     // Get completion rate (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+    const thirtyDaysAgoStr = normalizeDate(thirtyDaysAgo);
     
     const recentStatsResult = await db.query(
       `SELECT 
@@ -203,7 +219,7 @@ exports.getHabitStats = async (req, res) => {
     // Get last 7 days of data
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+    const sevenDaysAgoStr = normalizeDate(sevenDaysAgo);
     
     const recentLogsResult = await db.query(
       `SELECT date, completed, duration

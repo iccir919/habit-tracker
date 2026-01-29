@@ -75,30 +75,22 @@ function Dashboard() {
           {stats && (
             <div className="stats-grid">
               <StatsCard
+                icon="✅"
+                label="Today's Progress"
+                value={`${stats.todayCompleted}/${stats.todayTotal}`}
+                color="#10b981"
+              />
+              <StatsCard
                 icon="📊"
                 label="Active Habits"
                 value={stats.totalHabits}
                 color="#3b82f6"
               />
               <StatsCard
-                icon="📈"
-                label="Success Rate (30d)"
-                value={stats.completionRate}
-                suffix="%"
-                color="#8b5cf6"
-              />
-              <StatsCard
                 icon="📝"
                 label="Total Days Logged"
                 value={stats.totalDays}
-                color="#f59e0b"
-              />
-              <StatsCard
-                icon="🔥"
-                label="Best Streak"
-                value={stats.bestStreak}
-                suffix=" days"
-                color="#ef4444"
+                color="#ec4899"
               />
             </div>
           )}
