@@ -7,6 +7,12 @@ const db = new Database(dbPath);
 db.pragma('foreign_keys = ON');
 db.pragma('journal_mode = WAL');
 
+function initDB() {
+    console.log('Database initialized:', dbPath);
+    createTables(db);
+    createIndexes(db);
+}
+
 function getDB() {
     return db;
 }
@@ -16,4 +22,6 @@ function closeDB() {
     console.log('Database connection closed.');
 }
 
-module.exports = { getDB, closeDB };
+const { createTables, createIndexes } = require('./schema');
+
+module.exports = { initDB, getDB, closeDB };

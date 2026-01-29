@@ -1,8 +1,4 @@
-const { getDB } = require('./database');
-
-function createTables() {
-  const db = getDB();
-  
+function createTables(db) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,9 +56,7 @@ function createTables() {
   console.log('Tables created successfully');
 }
 
-function createIndexes() {
-  const db = getDB();
-  
+function createIndexes(db) {
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
     CREATE INDEX IF NOT EXISTS idx_habits_user_id ON habits(user_id);
