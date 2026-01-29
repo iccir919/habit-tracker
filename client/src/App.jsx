@@ -3,13 +3,13 @@ import { BrowserRouter as Router, Routes, Route, Navigate }from 'react-router-do
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './hooks/useAuth';
 
-import Layout from './components/layout/Layout';
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import Dashboard from './pages/Dashboard';
-import HabitsPage from './pages/HabitsPage';
-import DailyViewPage from './pages/DailyViewPage';
+import Layout from './components/layout/Layout.jsx';
+import LandingPage from './pages/LandingPage.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import RegisterPage from './pages/RegisterPage.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import HabitsPage from './pages/HabitsPage.jsx';
+import DailyViewPage from './pages/DailyViewPage.jsx';
 
 function PrivateRoute({ children }) {
     const { isAuthenticated } = useAuth();

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { statsService } from '../services/statsService';
-import { useAuth } from '../hooks/useAuth';
-import StatsCard from '../components/stats/StatsCard';
-import StreaksList from '../components/stats/StreaksList';
+import { statsService } from '../services/statsService.js';
+import { useAuth } from '../hooks/useAuth.js';
+import StatsCard from '../components/stats/StatsCard.jsx';
+import StreaksList from '../components/stats/StreaksList.jsx';
 import './Dashboard.css';
 
 function Dashboard() {

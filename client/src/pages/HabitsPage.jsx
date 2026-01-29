@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { habitService } from '../services/habitService';
-import HabitModal from '../components/habits/HabitModal';
-import HabitCard from '../components/habits/HabitCard';
+import { habitService } from '../services/habitService.js';
+import HabitModal from '../components/habits/HabitModal.jsx';
+import HabitCard from '../components/habits/HabitCard.jsx';
 import './HabitsPage.css';
 
 function HabitsPage() {

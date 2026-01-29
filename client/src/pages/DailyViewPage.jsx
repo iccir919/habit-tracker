@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { logService } from '../services/logService';
-import HabitLogEntry from '../components/logs/HabitLogEntry';
+import HabitLogEntry from '../components/logs/HabitLogEntry.jsx';
 import { formatDate, getToday, addDays, isToday, toDateString } from '../utils/dateHelpers';
 import './DailyViewPage.css';
 
