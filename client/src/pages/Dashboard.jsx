@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { statsService } from '../services/statsService.js';
-import { useAuth } from '../hooks/useAuth.js';
-import StatsCard from '../components/stats/StatsCard.jsx';
-import StreaksList from '../components/stats/StreaksList.jsx';
+import { statsService } from '../services/statsService';
+import { useAuth } from '../hooks/useAuth';
+import StatsCard from '../components/stats/StatsCard';
+import StreaksList from '../components/stats/StreaksList';
 import './Dashboard.css';
 
 function Dashboard() {
@@ -81,24 +81,24 @@ function Dashboard() {
                 color="#3b82f6"
               />
               <StatsCard
-                icon="✅"
-                label="Total Completions"
-                value={stats.totalLogs}
-                color="#10b981"
-              />
-              <StatsCard
                 icon="📈"
-                label="Completion Rate"
+                label="Success Rate (30d)"
                 value={stats.completionRate}
                 suffix="%"
                 color="#8b5cf6"
               />
               <StatsCard
-                icon="⏱️"
-                label="Total Hours"
-                value={stats.totalHours}
-                suffix="h"
+                icon="📝"
+                label="Total Days Logged"
+                value={stats.totalDays}
                 color="#f59e0b"
+              />
+              <StatsCard
+                icon="🔥"
+                label="Best Streak"
+                value={stats.bestStreak}
+                suffix=" days"
+                color="#ef4444"
               />
             </div>
           )}
