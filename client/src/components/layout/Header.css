@@ -12,6 +12,7 @@
     align-items: center;
     justify-content: space-between;
     height: 64px;
+    gap: 16px;
 }
 
 .logo {
@@ -22,6 +23,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    white-space: nowrap;
 }
 
 .nav {
@@ -35,6 +37,7 @@
     font-weight: 500;
     font-size: 14px;
     transition: color 0.2s;
+    white-space: nowrap;
 }
 
 .nav-link:hover {
@@ -56,20 +59,22 @@
 /* Mobile Styles */
 @media (max-width: 768px) {
     .header-content {
-        height: 56px;
-        gap: 12px;
+        height: 60px;
+        gap: 8px;
+        padding: 0 12px;
     }
 
     .logo {
-        font-size: 18px;
+        font-size: 16px;
+        gap: 6px;
     }
 
     .nav {
-        gap: 12px;
+        gap: 16px;
     }
 
     .nav-link {
-        font-size: 13px;
+        font-size: 14px;
     }
 
     .user-name {
@@ -81,23 +86,23 @@
     }
 
     .user-menu .btn {
-        padding: 6px 12px;
+        padding: 8px 12px;
         font-size: 13px;
     }
 }
 
 @media (max-width: 480px) {
     .header-content {
-        height: 52px;
-        gap: 8px;
+        padding: 0 8px;
     }
 
     .logo {
-        font-size: 16px;
+        font-size: 14px;
+        gap: 4px;
     }
 
     .nav {
-        gap: 8px;
+        gap: 10px;
     }
 
     .nav-link {
@@ -105,7 +110,7 @@
     }
 
     .user-menu .btn {
-        padding: 6px 10px;
+        padding: 6px 8px;
         font-size: 12px;
     }
 }

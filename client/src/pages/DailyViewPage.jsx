@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { logService } from '../services/logService';
+import { timeEntryService } from '../services/timeEntryService';
 import HabitLogEntry from '../components/logs/HabitLogEntry.jsx';
+import TimeCalendar from '../components/calendar/TimeCalendar.jsx';
 import { formatDate, getToday, addDays, isToday, toDateString } from '../utils/dateHelpers';
 import './DailyViewPage.css';
 
@@ -8,6 +10,7 @@ function DailyViewPage() {
   const [currentDate, setCurrentDate] = useState(getToday());
   const [allHabits, setAllHabits] = useState([]);
   const [habits, setHabits] = useState([]);
+  const [timeEntries, setTimeEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -20,19 +23,15 @@ function DailyViewPage() {
     return days[date.getDay()];
   };
 
-    const shouldShowHabit = (habit) => {
-    
-    // If no target_days specified (empty array), show every day
+  const shouldShowHabit = (habit) => {
     if (!habit.target_days || habit.target_days.length === 0) {
-        return true;
+      return true;
     }
     
-    // If target_days specified, check if today is one of them
     const dayOfWeek = getDayOfWeek(currentDate);
-    
     const result = habit.target_days.includes(dayOfWeek);
     return result;
-    };
+  };
 
   const loadDailySummary = async () => {
     try {
@@ -45,10 +44,31 @@ function DailyViewPage() {
       // Filter habits based on schedule
       const filteredHabits = (data.habits || []).filter(shouldShowHabit);
       setHabits(filteredHabits);
+
+      // Load all time entries for duration habits
+      await loadTimeEntries(filteredHabits);
     } catch (err) {
       setError(err.message || 'Failed to load habits');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadTimeEntries = async (habitsList) => {
+    try {
+      const allEntries = [];
+      
+      // Get time entries for each duration habit that has a log
+      for (const habit of habitsList) {
+        if (habit.tracking_type === 'duration' && habit.log?.id) {
+          const entries = await timeEntryService.getTimeEntries(habit.log.id);
+          allEntries.push(...entries);
+        }
+      }
+      
+      setTimeEntries(allEntries);
+    } catch (err) {
+      console.error('Failed to load time entries:', err);
     }
   };
 
@@ -73,12 +93,26 @@ function DailyViewPage() {
         });
       }
       
-      // Always reload the daily summary to get fresh data
       await loadDailySummary();
     } catch (err) {
       alert(err.message || 'Failed to update log');
     }
   };
+
+  const handleCalendarUpdate = async () => {
+    await loadDailySummary();
+  };
+
+  if (loading) {
+    return (
+      <div className="container">
+        <div className="loading">Loading daily view...</div>
+      </div>
+    );
+  }
+
+  const completionHabits = habits.filter(h => h.tracking_type === 'completion');
+  const durationHabits = habits.filter(h => h.tracking_type === 'duration');
 
   return (
     <div className="container">
@@ -132,17 +166,59 @@ function DailyViewPage() {
           </a>
         </div>
       ) : (
-        <div className="habits-list">
-          {habits.map((habit) => (
-            <HabitLogEntry
-              key={habit.id}
-              habit={habit}
-              log={habit.log}
-              date={currentDate}
-              onUpdate={handleUpdateLog}
-              onRefresh={loadDailySummary}
-            />
-          ))}
+        <div className="daily-view-content">
+          {/* Left Column - Habits List */}
+          <div className="habits-column">
+            <h2 className="column-title">Habits</h2>
+            
+            {completionHabits.length > 0 && (
+              <div className="habits-section">
+                <h3 className="section-subtitle">Completion Habits</h3>
+                <div className="habits-list">
+                  {completionHabits.map((habit) => (
+                    <HabitLogEntry
+                      key={habit.id}
+                      habit={habit}
+                      log={habit.log}
+                      date={currentDate}
+                      onUpdate={handleUpdateLog}
+                      onRefresh={loadDailySummary}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {durationHabits.length > 0 && (
+              <div className="habits-section">
+                <h3 className="section-subtitle">Duration Habits</h3>
+                <div className="habits-list">
+                  {durationHabits.map((habit) => (
+                    <HabitLogEntry
+                      key={habit.id}
+                      habit={habit}
+                      log={habit.log}
+                      date={currentDate}
+                      onUpdate={handleUpdateLog}
+                      onRefresh={loadDailySummary}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Time Calendar */}
+          {durationHabits.length > 0 && (
+            <div className="calendar-column">
+              <TimeCalendar
+                date={toDateString(currentDate)}
+                habits={habits}
+                timeEntries={timeEntries}
+                onUpdate={handleCalendarUpdate}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -150,7 +226,7 @@ function DailyViewPage() {
         <div className="summary-stat">
           <span className="stat-label">Completed:</span>
           <span className="stat-value">
-            {habits.filter(h => h.log?.completed === true).length} / {habits.length}
+            {habits.filter(h => h.log?.completed === true || h.log?.completed === 1).length} / {habits.length}
           </span>
         </div>
         {habits.some(h => h.tracking_type === 'duration') && (
