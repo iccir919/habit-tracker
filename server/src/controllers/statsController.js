@@ -32,30 +32,14 @@ exports.getUserStats = async (req, res) => {
     // Get today's progress (use local timezone)
     const today = normalizeDate(new Date());
     
-    // Get all active habits with their schedules
+    // Get all active habits
     const allHabitsResult = await db.query(
-      'SELECT id, target_days FROM habits WHERE user_id = $1 AND active = true',
+      'SELECT id, weekly_goal FROM habits WHERE user_id = $1 AND active = true',
       [userId]
     );
     
     const allHabits = allHabitsResult.rows;
-    
-    // Filter habits scheduled for today
-    const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()];
-    
-    const todayHabits = allHabits.filter(habit => {
-      if (!habit.target_days || habit.target_days === '[]') {
-        return true; // Daily habit
-      }
-      try {
-        const days = JSON.parse(habit.target_days);
-        return days.length === 0 || days.includes(dayOfWeek);
-      } catch {
-        return true;
-      }
-    });
-    
-    const todayTotal = todayHabits.length;
+    const todayTotal = allHabits.length;
     
     // Get completed habits for today
     const todayCompletedResult = await db.query(

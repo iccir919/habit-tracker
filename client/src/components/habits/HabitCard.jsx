@@ -1,28 +1,14 @@
 import './HabitCard.css';
 
 function HabitCard({ habit, onEdit, onDelete }) {
-  const formatSchedule = (targetDays) => {
-    if (!targetDays || targetDays.length === 0) {
+  const formatSchedule = (weeklyGoal) => {
+    console.log(weeklyGoal)
+    if (weeklyGoal === 7) {
       return 'Every day';
     }
-    
-    if (targetDays.length === 7) {
-      return 'Every day';
-    }
-    
-    const dayNames = {
-      monday: 'Mon',
-      tuesday: 'Tue',
-      wednesday: 'Wed',
-      thursday: 'Thu',
-      friday: 'Fri',
-      saturday: 'Sat',
-      sunday: 'Sun'
-    };
-    
-    return targetDays.map(d => dayNames[d]).join(', ');
+    return `${weeklyGoal}x per week`;
   };
-
+  console.log(habit)
   return (
     <div className="habit-card" style={{ borderLeftColor: habit.color }}>
       <div className="habit-card-header">
@@ -67,8 +53,8 @@ function HabitCard({ habit, onEdit, onDelete }) {
         )}
 
         <div className="habit-detail">
-          <span className="detail-label">Schedule:</span>
-          <span className="detail-value">{formatSchedule(habit.target_days)}</span>
+          <span className="detail-label">Goal:</span>
+          <span className="detail-value">{formatSchedule(habit.weekly_goal)}</span>
         </div>
 
         {habit.category && (

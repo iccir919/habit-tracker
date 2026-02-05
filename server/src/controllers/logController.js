@@ -1,7 +1,7 @@
 const { getDB } = require('../db/database');
 const { validationResult } = require('express-validator');
 
-// Helper function to normalize date to start of day
+// Helper function to normalize date to local timezone
 function normalizeDate(dateString) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     return dateString;
@@ -189,19 +189,6 @@ exports.getDailySummary = async (req, res) => {
     );
     
     const habits = habitsResult.rows;
-    
-    // Parse target_days for each habit
-    habits.forEach(habit => {
-      if (habit.target_days) {
-        try {
-          habit.target_days = JSON.parse(habit.target_days);
-        } catch (e) {
-          habit.target_days = [];
-        }
-      } else {
-        habit.target_days = [];
-      }
-    });
     
     // Get all logs for this date
     const logsResult = await db.query(

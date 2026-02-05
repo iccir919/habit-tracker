@@ -1,23 +1,13 @@
 import { useState, useEffect } from 'react';
 import './HabitModal.css';
 
-const DAYS_OF_WEEK = [
-  { value: 'monday', label: 'Monday' },
-  { value: 'tuesday', label: 'Tuesday' },
-  { value: 'wednesday', label: 'Wednesday' },
-  { value: 'thursday', label: 'Thursday' },
-  { value: 'friday', label: 'Friday' },
-  { value: 'saturday', label: 'Saturday' },
-  { value: 'sunday', label: 'Sunday' }
-];
-
 function HabitModal({ isOpen, onClose, onSave, habit }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     trackingType: 'completion',
     targetDuration: '',
-    targetDays: [],
+    weeklyGoal: 7,
     category: '',
     color: '#3b82f6',
     icon: ''
@@ -32,7 +22,7 @@ function HabitModal({ isOpen, onClose, onSave, habit }) {
         description: habit.description || '',
         trackingType: habit.tracking_type || 'completion',
         targetDuration: habit.target_duration || '',
-        targetDays: habit.target_days || [],
+        weeklyGoal: habit.weekly_goal || 7,
         category: habit.category || '',
         color: habit.color || '#3b82f6',
         icon: habit.icon || ''
@@ -43,7 +33,7 @@ function HabitModal({ isOpen, onClose, onSave, habit }) {
         description: '',
         trackingType: 'completion',
         targetDuration: '',
-        targetDays: [],
+        weeklyGoal: 7,
         category: '',
         color: '#3b82f6',
         icon: ''
@@ -59,19 +49,6 @@ function HabitModal({ isOpen, onClose, onSave, habit }) {
     }));
   };
 
-  const handleDayToggle = (day) => {
-    setFormData(prev => {
-      const targetDays = prev.targetDays.includes(day)
-        ? prev.targetDays.filter(d => d !== day)
-        : [...prev.targetDays, day];
-      
-      return {
-        ...prev,
-        targetDays
-      };
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -83,6 +60,11 @@ function HabitModal({ isOpen, onClose, onSave, habit }) {
 
     if (formData.trackingType === 'duration' && !formData.targetDuration) {
       setError('Target duration is required for duration habits');
+      return;
+    }
+
+    if (!formData.weeklyGoal || formData.weeklyGoal < 1 || formData.weeklyGoal > 7) {
+      setError('Weekly goal must be between 1 and 7 days');
       return;
     }
 
@@ -100,7 +82,12 @@ function HabitModal({ isOpen, onClose, onSave, habit }) {
 
   if (!isOpen) return null;
 
-  const isDaily = formData.targetDays.length === 0;
+  const getGoalText = () => {
+    if (formData.weeklyGoal === 7) {
+      return 'Daily (every day)';
+    }
+    return `${formData.weeklyGoal} times per week`;
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -171,34 +158,26 @@ function HabitModal({ isOpen, onClose, onSave, habit }) {
             )}
           </div>
 
-        <div className="form-group">
-            <label>Schedule</label>
-                {formData.targetDays.length === 0 ? (
-                    <p className="form-hint">
-                    This habit will show <strong>every day</strong>. Select specific days below to customize.
-                    </p>
-                ) : (
-                    <p className="form-hint">
-                    This habit will show on:{' '}
-                    {formData.targetDays
-                        .map(d => <strong key={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</strong>)
-                        .reduce((prev, curr) => [prev, ', ', curr])
-                    }
-                    </p>
-                )}
-            <div className="days-selector">
-                {DAYS_OF_WEEK.map(day => (
-                <button
-                    key={day.value}
-                    type="button"
-                    className={`day-btn ${formData.targetDays.includes(day.value) ? 'selected' : ''}`}
-                    onClick={() => handleDayToggle(day.value)}
-                >
-                    {day.label.substring(0, 3)}
-                </button>
-                ))}
-            </div>
-        </div>
+          <div className="form-group">
+            <label htmlFor="weeklyGoal">Weekly Goal *</label>
+            <input
+              id="weeklyGoal"
+              name="weeklyGoal"
+              type="number"
+              className="input"
+              value={formData.weeklyGoal}
+              onChange={handleChange}
+              min="1"
+              max="7"
+              required
+            />
+            <p className="form-hint">
+              Goal: <strong>{getGoalText()}</strong>
+            </p>
+            <p className="form-hint-small">
+              How many days per week do you want to complete this habit?
+            </p>
+          </div>
 
           <div className="form-row">
             <div className="form-group">

@@ -18,21 +18,6 @@ function DailyViewPage() {
     loadDailySummary();
   }, [currentDate]);
 
-  const getDayOfWeek = (date) => {
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    return days[date.getDay()];
-  };
-
-  const shouldShowHabit = (habit) => {
-    if (!habit.target_days || habit.target_days.length === 0) {
-      return true;
-    }
-    
-    const dayOfWeek = getDayOfWeek(currentDate);
-    const result = habit.target_days.includes(dayOfWeek);
-    return result;
-  };
-
   const loadDailySummary = async () => {
     try {
       setLoading(true);
@@ -41,12 +26,11 @@ function DailyViewPage() {
       
       setAllHabits(data.habits || []);
       
-      // Filter habits based on schedule
-      const filteredHabits = (data.habits || []).filter(shouldShowHabit);
-      setHabits(filteredHabits);
+      // Show all habits (no day filtering with weekly goals)
+      setHabits(data.habits || []);
 
       // Load all time entries for duration habits
-      await loadTimeEntries(filteredHabits);
+      await loadTimeEntries(data.habits || []);
     } catch (err) {
       setError(err.message || 'Failed to load habits');
     } finally {
@@ -155,14 +139,10 @@ function DailyViewPage() {
       {habits.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">📝</div>
-          <h2>No habits scheduled for today</h2>
-          <p>
-            {allHabits.length === 0 
-              ? 'Create your first habit to start tracking'
-              : 'You have habits, but none are scheduled for today'}
-          </p>
+          <h2>No habits yet</h2>
+          <p>Create your first habit to start tracking</p>
           <a href="/habits" className="btn btn-primary">
-            Manage Habits
+            Create Habit
           </a>
         </div>
       ) : (

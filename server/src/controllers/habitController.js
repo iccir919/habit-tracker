@@ -14,7 +14,7 @@ exports.createHabit = async (req, res) => {
       description = '',
       trackingType,
       targetDuration,
-      targetDays = [],
+      weeklyGoal = 7, // Default to daily
       category = '',
       color = '#3b82f6',
       icon = ''
@@ -26,7 +26,7 @@ exports.createHabit = async (req, res) => {
     const result = await db.query(
       `INSERT INTO habits (
         user_id, name, description, tracking_type, target_duration,
-        target_days, category, color, icon
+        weekly_goal, category, color, icon
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
       [
         req.user.id,
@@ -34,7 +34,7 @@ exports.createHabit = async (req, res) => {
         description,
         trackingType,
         cleanTargetDuration,
-        JSON.stringify(targetDays),
+        weeklyGoal,
         category,
         color,
         icon
@@ -42,10 +42,6 @@ exports.createHabit = async (req, res) => {
     );
     
     const habit = result.rows[0];
-    
-    if (habit.target_days) {
-      habit.target_days = JSON.parse(habit.target_days);
-    }
     
     res.status(201).json(habit);
   } catch (err) {
@@ -65,13 +61,6 @@ exports.getHabits = async (req, res) => {
     );
     
     const habits = result.rows;
-    
-    // Parse target_days for each habit
-    habits.forEach(habit => {
-      if (habit.target_days) {
-        habit.target_days = JSON.parse(habit.target_days);
-      }
-    });
     
     res.json(habits);
   } catch (err) {
@@ -94,10 +83,6 @@ exports.getHabit = async (req, res) => {
       return res.status(404).json({ error: 'Habit not found' });
     }
     
-    if (habit.target_days) {
-      habit.target_days = JSON.parse(habit.target_days);
-    }
-    
     res.json(habit);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
@@ -111,16 +96,14 @@ exports.updateHabit = async (req, res) => {
     const values = [];
     let paramCount = 1;
     
-    const allowedFields = ['name', 'description', 'trackingType', 'targetDuration', 'targetDays', 'category', 'color', 'icon', 'active'];
+    const allowedFields = ['name', 'description', 'trackingType', 'targetDuration', 'weeklyGoal', 'category', 'color', 'icon', 'active'];
     
     Object.keys(req.body).forEach(key => {
       if (allowedFields.includes(key)) {
         const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
         updates.push(`${dbKey} = $${paramCount}`);
         
-        if (key === 'targetDays') {
-          values.push(JSON.stringify(req.body[key]));
-        } else if (key === 'targetDuration') {
+        if (key === 'targetDuration') {
           // Convert empty string to null for targetDuration
           values.push(req.body[key] === '' || req.body[key] === undefined ? null : req.body[key]);
         } else {
@@ -149,10 +132,6 @@ exports.updateHabit = async (req, res) => {
     }
     
     const habit = result.rows[0];
-    
-    if (habit.target_days) {
-      habit.target_days = JSON.parse(habit.target_days);
-    }
     
     res.json(habit);
   } catch (err) {
